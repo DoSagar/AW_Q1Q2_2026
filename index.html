@@ -262,11 +262,17 @@ function drawWheel(highlightIdx){
       const dist=r*.58,pr=Math.min(r*.17,r*step*.34);
       const px=cx+dist*Math.cos(mid),py=cy+dist*Math.sin(mid);
       ctx.save();ctx.beginPath();ctx.arc(px,py,pr,0,Math.PI*2);ctx.clip();
-      // apply stored crop — sc/ox/oy come from the crop modal (CR=180 circle in CS=400 canvas)
-      const sc=d.cropScale||1,ox=d.cropX||0,oy=d.cropY||0;
-      const sw=(180*2)/sc,sh=sw; // source size in original image pixels (CR=180)
-      const sx=d.img.width/2-sw/2-ox/sc,sy=d.img.height/2-sh/2-oy/sc;
-      ctx.drawImage(d.img,sx,sy,sw,sh,px-pr,py-pr,pr*2,pr*2);ctx.restore();
+      if(d.cropScale){
+        // original image with stored crop params
+        const sc=d.cropScale,ox=d.cropX||0,oy=d.cropY||0;
+        const sw=(180*2)/sc,sh=sw;
+        const sx=d.img.width/2-sw/2-ox/sc,sy=d.img.height/2-sh/2-oy/sc;
+        ctx.drawImage(d.img,sx,sy,sw,sh,px-pr,py-pr,pr*2,pr*2);
+      } else {
+        // pre-cropped square image — draw directly
+        ctx.drawImage(d.img,px-pr,py-pr,pr*2,pr*2);
+      }
+      ctx.restore();
       ctx.beginPath();ctx.arc(px,py,pr,0,Math.PI*2);
       ctx.strokeStyle='rgba(255,255,255,0.75)';ctx.lineWidth=2;ctx.stroke();
     }
