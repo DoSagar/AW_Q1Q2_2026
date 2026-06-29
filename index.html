@@ -209,6 +209,9 @@ h1 em{font-style:normal;color:var(--blue);}
 
 <script>
 const PALETTE=['#003058','#005DAA','#4D8CC4','#A0C2E0','#C0392B','#4D4D4D','#1A5C8F','#2A6FA8','#3D5A80','#6B7FA8','#264F78','#5B7FAA'];
+const isHost=new URLSearchParams(location.search).has('host');
+const FB='https://spinthewheel-a5470-default-rtdb.europe-west1.firebasedatabase.app/wheel.json';
+let lastTs=0,fbEs=null;
 
 const state={
   shame:{rotation:0,slices:Array.from({length:6},(_,i)=>({name:'',img:null,imgSrc:null,color:PALETTE[i]}))},
@@ -296,16 +299,18 @@ function switchTab(tab){
 }
 
 function handleSpin(){
+  if(!isHost)return;
   if(spinPhase==='idle')startSpin();
   else if(spinPhase==='cruising')triggerStop();
 }
 
-function startSpin(){
+function startSpin(fromRemote){
   spinPhase='cruising';spinVelocity=0;
   const btn=document.getElementById('spinBtn');
-  btn.textContent='Stop';btn.classList.add('spinning');
+  if(isHost){btn.textContent='Stop';btn.classList.add('spinning');}
   canvas.classList.remove('celebrating');
   cancelAnimationFrame(animFrame);
+  if(!fromRemote)fbPushSpin('cruising',-1);
   (function loop(){
     if(spinPhase!=='cruising')return;
     spinVelocity=Math.min(spinVelocity+.0025,.065);
@@ -316,9 +321,10 @@ function startSpin(){
   })();
 }
 
-function triggerStop(){
+function triggerStop(fromRemote,forcedWinner){
   const data=activeTab==='shame'?state.shame.slices:state.reroll.items;
-  pendingWinnerIdx=pickWinner(data);
+  pendingWinnerIdx=(fromRemote&&forcedWinner>=0)?forcedWinner:pickWinner(data);
+  if(!fromRemote)fbPushSpin('stopping',pendingWinnerIdx);
   const currentRot=activeTab==='shame'?state.shame.rotation:state.reroll.rotation;
   const n=data.length,step=(2*Math.PI)/n;
   const midAngle=(pendingWinnerIdx+.5)*step;
@@ -330,7 +336,7 @@ function triggerStop(){
   stopStartTime=performance.now();
   spinPhase='stopping';
   const btn=document.getElementById('spinBtn');
-  btn.textContent='…';btn.disabled=true;btn.classList.remove('spinning');
+  if(isHost){btn.textContent='…';btn.disabled=true;btn.classList.remove('spinning');}
   cancelAnimationFrame(animFrame);
   (function stopLoop(now){
     if(spinPhase!=='stopping')return;
@@ -345,8 +351,7 @@ function triggerStop(){
       if(activeTab==='shame')state.shame.rotation=stopTargetRot;
       else state.reroll.rotation=stopTargetRot;
       spinPhase='idle';
-      const b=document.getElementById('spinBtn');
-      b.textContent='Spin';b.disabled=false;b.classList.remove('spinning');
+      if(isHost){const b=document.getElementById('spinBtn');b.textContent='Spin';b.disabled=false;b.classList.remove('spinning');}
       celebrateStop(pendingWinnerIdx);
     }
   })(performance.now());
@@ -415,6 +420,7 @@ function openDrawer(){
 function closeDrawer(){
   document.getElementById('drawer').classList.remove('open');
   document.getElementById('drawerOverlay').classList.remove('open');
+  if(isHost)fbPushConfig();
 }
 function renderDrawer(){if(activeTab==='shame')renderShameDrawer();else renderRerollDrawer();}
 
@@ -618,5 +624,78 @@ function stopConfetti(){
   document.getElementById('confetti-canvas').getContext('2d').clearRect(0,0,window.innerWidth,window.innerHeight);
 }
 
+// ── Firebase sync ─────────────────────────────────────────
+function fbWrite(obj){
+  fetch(FB,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)}).catch(()=>{});
+}
+
+function fbCurrentConfig(){
+  return{
+    tab:activeTab,
+    shame:state.shame.slices.map(s=>({name:s.name||'',color:s.color})),
+    reroll:state.reroll.items.map(s=>({name:s.name||'',color:s.color,weight:s.weight,forced:s.forced})),
+    phase:'idle',winner:-1,ts:Date.now()
+  };
+}
+
+function fbPushConfig(){fbWrite(fbCurrentConfig());}
+
+function fbPushSpin(phase,winner){
+  const cfg=fbCurrentConfig();
+  cfg.phase=phase;cfg.winner=winner;cfg.ts=Date.now();
+  fbWrite(cfg);
+}
+
+function fbListen(){
+  if(fbEs){fbEs.close();}
+  fbEs=new EventSource(FB);
+  fbEs.addEventListener('put',e=>{try{handleFbEvent(JSON.parse(e.data).data);}catch(_){}});
+  fbEs.addEventListener('patch',e=>{try{handleFbEvent(JSON.parse(e.data).data);}catch(_){}});
+  fbEs.onerror=()=>{setTimeout(fbListen,3000);fbEs.close();fbEs=null;};
+}
+
+function handleFbEvent(d){
+  if(!d||d.ts<=lastTs)return;
+  lastTs=d.ts;
+  // Sync tab
+  if(d.tab&&d.tab!==activeTab){
+    activeTab=d.tab;
+    document.getElementById('tab-shame').classList.toggle('active',activeTab==='shame');
+    document.getElementById('tab-reroll').classList.toggle('active',activeTab==='reroll');
+  }
+  // Sync contestants
+  if(d.shame){
+    while(state.shame.slices.length<d.shame.length)state.shame.slices.push({name:'',img:null,imgSrc:null,color:PALETTE[state.shame.slices.length%PALETTE.length]});
+    state.shame.slices.length=d.shame.length;
+    d.shame.forEach((s,i)=>{state.shame.slices[i].name=s.name;state.shame.slices[i].color=s.color;});
+  }
+  if(d.reroll){
+    while(state.reroll.items.length<d.reroll.length)state.reroll.items.push({name:'',weight:1,forced:false,color:PALETTE[state.reroll.items.length%PALETTE.length]});
+    state.reroll.items.length=d.reroll.length;
+    d.reroll.forEach((s,i)=>{state.reroll.items[i].name=s.name;state.reroll.items[i].color=s.color;state.reroll.items[i].weight=s.weight;state.reroll.items[i].forced=s.forced;});
+  }
+  // Sync spin state
+  if(d.phase==='cruising'&&spinPhase==='idle'){
+    startSpin(true);
+  } else if(d.phase==='stopping'&&spinPhase==='cruising'){
+    triggerStop(true,d.winner);
+  } else if(d.phase==='idle'&&spinPhase==='idle'){
+    drawWheel();
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────
 requestAnimationFrame(()=>requestAnimationFrame(sizeCanvas));
+
+// Host: push config on load so viewers get contestant names immediately
+// Viewer: start listening + update UI
+if(isHost){
+  window.addEventListener('load',()=>setTimeout(fbPushConfig,800));
+} else {
+  fbListen();
+  // Replace spin button with a live indicator
+  const btn=document.getElementById('spinBtn');
+  btn.textContent='● Live';btn.disabled=true;
+  btn.style.cssText='background:var(--navy);opacity:.55;cursor:default;animation:none;letter-spacing:.08em;';
+}
 </script>
