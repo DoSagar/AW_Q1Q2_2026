@@ -527,15 +527,23 @@ function clampCrop(){
 function onCropZoom(v){crop.scale=+v;clampCrop();drawCropCanvas();}
 
 function confirmCrop(){
-  // Store crop params relative to image natural size
   const s=state.shame.slices[crop.sliceIdx];
-  s.img=crop.img;
-  s.imgSrc=crop.img.src;
-  // convert canvas-space offset back to image pixels
-  s.cropScale=crop.scale;
-  s.cropX=crop.x; // canvas-center-relative, scaled pixels
-  s.cropY=crop.y;
-  renderShameDrawer();drawWheel();
+  // Render the cropped area to a 300×300 compressed JPEG (~20–50KB)
+  const OUT=300,out=document.createElement('canvas');
+  out.width=OUT;out.height=OUT;
+  const octx=out.getContext('2d');
+  const sf=OUT/(CR*2);
+  const iw=crop.img.width*crop.scale*sf,ih=crop.img.height*crop.scale*sf;
+  const ix=(CS/2-crop.img.width*crop.scale/2+crop.x-(CS/2-CR))*sf;
+  const iy=(CS/2-crop.img.height*crop.scale/2+crop.y-(CS/2-CR))*sf;
+  octx.drawImage(crop.img,ix,iy,iw,ih);
+  s.imgSrc=out.toDataURL('image/jpeg',0.82);
+  // No crop params needed — image is already cropped
+  s.cropScale=undefined;s.cropX=undefined;s.cropY=undefined;
+  const finalImg=new Image();
+  finalImg.onload=()=>{s.img=finalImg;drawWheel();};
+  finalImg.src=s.imgSrc;
+  renderShameDrawer();
   document.getElementById('cropOverlay').classList.remove('open');
 }
 function cancelCrop(){document.getElementById('cropOverlay').classList.remove('open');}
