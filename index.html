@@ -275,7 +275,7 @@ function drawWheel(highlightIdx){
     ctx.strokeStyle='rgba(255,255,255,0.28)';ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
     const raw=d.name||(activeTab==='shame'?'#'+(i+1):'Item '+(i+1));
     const lbl=raw.length>14?raw.slice(0,14)+'…':raw;
-    const labelDist=(activeTab==='shame'&&d.img)?r*.86:r*.7;
+    const labelDist=(activeTab==='shame'&&d.img)?r*.96:r*.7;
     ctx.save();ctx.translate(cx,cy);ctx.rotate(mid);ctx.textAlign='right';
     const fs=Math.max(10,Math.min(16,r/(n<5?9:n<9?11:14)));
     ctx.font='600 '+fs+'px Raleway,Arial,sans-serif';
