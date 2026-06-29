@@ -87,6 +87,8 @@ h1 em{font-style:normal;color:var(--blue);}
 .add-row-btn:disabled{opacity:.4;cursor:not-allowed;}
 .done-btn{width:100%;padding:.62rem;background:var(--blue);color:var(--white);border:none;border-radius:2px;cursor:pointer;font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:background .15s;}
 .done-btn:hover{background:var(--navy);}
+.export-btn{width:100%;padding:.52rem;background:transparent;border:1px solid var(--blue-light);color:var(--blue);border-radius:2px;cursor:pointer;font-family:var(--font);font-size:.75rem;font-weight:600;letter-spacing:.06em;transition:border-color .15s,color .15s;}
+.export-btn:hover{border-color:var(--blue);color:var(--navy);}
 
 /* WINNER OVERLAY — frameless */
 .winner-overlay{position:fixed;inset:0;background:rgba(0,28,58,0.87);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;z-index:200;opacity:0;pointer-events:none;transition:opacity .35s;}
@@ -439,7 +441,9 @@ function renderShameDrawer(){
       (state.shame.slices.length>2?'<button class="row-rm" onclick="removeShame('+i+')">✕</button>':'');
     body.appendChild(row);
   });
-  foot.innerHTML='<button class="add-row-btn"'+(state.shame.slices.length>=16?' disabled':'')+' onclick="addShame()">+ Add contestant</button><button class="done-btn" onclick="closeDrawer()">Done</button>';
+  foot.innerHTML=(isHost?'<button class="export-btn" onclick="exportSetup()">⬇ Download setup</button>':'')+
+    '<button class="add-row-btn"'+(state.shame.slices.length>=16?' disabled':'')+' onclick="addShame()">+ Add contestant</button>'+
+    '<button class="done-btn" onclick="closeDrawer()">Done</button>';
 }
 function renderRerollDrawer(){
   const body=document.getElementById('drawerBody'),foot=document.getElementById('drawerFooter');
@@ -455,7 +459,10 @@ function renderRerollDrawer(){
       (state.reroll.items.length>2?'<button class="row-rm" onclick="removeReroll('+i+')">✕</button>':'');
     body.appendChild(row);
   });
-  foot.innerHTML='<div class="drawer-hint"><strong>Bias</strong> sets relative probability. <strong>Force</strong> guarantees that item wins — only one at a time.</div><button class="add-row-btn"'+(state.reroll.items.length>=16?' disabled':'')+' onclick="addReroll()">+ Add item</button><button class="done-btn" onclick="closeDrawer()">Done</button>';
+  foot.innerHTML='<div class="drawer-hint"><strong>Bias</strong> sets relative probability. <strong>Force</strong> guarantees that item wins — only one at a time.</div>'+
+    (isHost?'<button class="export-btn" onclick="exportSetup()">⬇ Download setup</button>':'')+
+    '<button class="add-row-btn"'+(state.reroll.items.length>=16?' disabled':'')+' onclick="addReroll()">+ Add item</button>'+
+    '<button class="done-btn" onclick="closeDrawer()">Done</button>';
 }
 function toggleForce(i){const items=state.reroll.items,was=items[i].forced;items.forEach(d=>d.forced=false);if(!was)items[i].forced=true;renderRerollDrawer();}
 function addShame(){if(state.shame.slices.length>=16)return;state.shame.slices.push({name:'',img:null,imgSrc:null,color:PALETTE[state.shame.slices.length%PALETTE.length]});renderShameDrawer();drawWheel();document.getElementById('drawerBody').querySelectorAll('.row-input')[state.shame.slices.length-1].focus();}
@@ -625,6 +632,34 @@ function stopConfetti(){
   document.getElementById('confetti-canvas').getContext('2d').clearRect(0,0,window.innerWidth,window.innerHeight);
 }
 
+// ── Export & preset ───────────────────────────────────────
+function loadPreset(){
+  const p=window.__PRESET__;if(!p)return;
+  if(p.tab)activeTab=p.tab;
+  if(p.shame){
+    state.shame.slices=p.shame.map((s,i)=>({name:s.name||'',color:s.color||PALETTE[i],img:null,imgSrc:s.imgSrc||null,cropScale:s.cropScale,cropX:s.cropX,cropY:s.cropY}));
+    state.shame.slices.forEach(s=>{
+      if(s.imgSrc){const img=new Image();img.onload=()=>{s.img=img;drawWheel();};img.src=s.imgSrc;}
+    });
+  }
+  if(p.reroll){
+    state.reroll.items=p.reroll.map((s,i)=>({name:s.name||'',color:s.color||PALETTE[i],weight:s.weight||1,forced:s.forced||false}));
+  }
+}
+
+function exportSetup(){
+  const preset={
+    tab:activeTab,
+    shame:state.shame.slices.map(s=>({name:s.name||'',color:s.color,imgSrc:s.imgSrc||null,cropScale:s.cropScale,cropX:s.cropX,cropY:s.cropY})),
+    reroll:state.reroll.items.map(s=>({name:s.name||'',color:s.color,weight:s.weight,forced:s.forced}))
+  };
+  const injection='<script>window.__PRESET__='+JSON.stringify(preset)+';\x3c/script>';
+  const html=document.documentElement.outerHTML.replace('<script>\nconst PALETTE=',injection+'\n<script>\nconst PALETTE=');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+  a.download='index.html';a.click();URL.revokeObjectURL(a.href);
+}
+
 // ── Firebase sync ─────────────────────────────────────────
 function fbWrite(obj){
   fetch(FB,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)}).catch(()=>{});
@@ -691,6 +726,7 @@ function handleFbEvent(d){
 }
 
 // ── Init ──────────────────────────────────────────────────
+loadPreset();
 requestAnimationFrame(()=>requestAnimationFrame(sizeCanvas));
 
 // Host: push config on load so viewers get contestant names immediately
@@ -699,10 +735,11 @@ if(isHost){
   window.addEventListener('load',()=>setTimeout(fbPushConfig,800));
 } else {
   fbListen();
-  // Replace spin button with a live indicator
+  // Replace spin button with a live indicator, hide controls
   const btn=document.getElementById('spinBtn');
   btn.textContent='● Live';btn.disabled=true;
   btn.style.cssText='background:var(--navy);opacity:.55;cursor:default;animation:none;letter-spacing:.08em;';
   document.getElementById('editBtn').style.display='none';
+  document.head.insertAdjacentHTML('beforeend','<style>.tabs{display:none!important}.winner-spin-again{display:none!important}</style>');
 }
 </script>
