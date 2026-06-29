@@ -408,6 +408,7 @@ function showWinner(idx){
 function closeWinner(){
   document.getElementById('winnerOverlay').classList.remove('show');
   stopConfetti();
+  if(isHost)fbPushConfig(); // signals viewers to dismiss their overlay
 }
 
 // ── Drawer ──────────────────────────────────────────────
@@ -662,6 +663,8 @@ function handleFbEvent(d){
     activeTab=d.tab;
     document.getElementById('tab-shame').classList.toggle('active',activeTab==='shame');
     document.getElementById('tab-reroll').classList.toggle('active',activeTab==='reroll');
+    document.getElementById('editBtnLabel').textContent=activeTab==='shame'?'Contestants':'Items';
+    drawWheel();
   }
   // Sync contestants
   if(d.shame){
@@ -679,7 +682,10 @@ function handleFbEvent(d){
     startSpin(true);
   } else if(d.phase==='stopping'&&spinPhase==='cruising'){
     triggerStop(true,d.winner);
-  } else if(d.phase==='idle'&&spinPhase==='idle'){
+  } else if(d.phase==='idle'){
+    // Host dismissed winner — close overlay on viewers too
+    document.getElementById('winnerOverlay').classList.remove('show');
+    stopConfetti();
     drawWheel();
   }
 }
@@ -697,5 +703,6 @@ if(isHost){
   const btn=document.getElementById('spinBtn');
   btn.textContent='● Live';btn.disabled=true;
   btn.style.cssText='background:var(--navy);opacity:.55;cursor:default;animation:none;letter-spacing:.08em;';
+  document.getElementById('editBtn').style.display='none';
 }
 </script>
