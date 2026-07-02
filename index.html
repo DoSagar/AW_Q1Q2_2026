@@ -393,10 +393,12 @@ function pickWinner(data){
   if(activeTab==='reroll'){
     const fi=data.findIndex(d=>d.forced);
     if(fi>=0)return fi;
-    const total=data.reduce((s,d)=>s+(d.weight||1),0);
+    const eligible=data.map((d,i)=>({i,w:d.weight??1})).filter(d=>d.w>0);
+    if(!eligible.length)return Math.floor(Math.random()*data.length); // all zero — pick any
+    const total=eligible.reduce((s,d)=>s+d.w,0);
     let r=Math.random()*total;
-    for(let i=0;i<data.length;i++){r-=(data[i].weight||1);if(r<=0)return i;}
-    return data.length-1;
+    for(const d of eligible){r-=d.w;if(r<=0)return d.i;}
+    return eligible[eligible.length-1].i;
   }
   return Math.floor(Math.random()*data.length);
 }
@@ -463,7 +465,7 @@ function renderRerollDrawer(){
       '</div>'+
       '<input class="row-input" type="text" placeholder="Item…" value="'+esc(it.name)+'" maxlength="24" oninput="state.reroll.items['+i+'].name=this.value;drawWheel()">'+
       '<span class="weight-label">Bias</span>'+
-      '<input class="weight-input" type="number" min="1" max="20" value="'+it.weight+'" oninput="state.reroll.items['+i+'].weight=Math.max(1,+this.value)||1">'+
+      '<input class="weight-input" type="number" min="0" max="20" value="'+it.weight+'" oninput="state.reroll.items['+i+'].weight=Math.max(0,+this.value||0)">'+
       '<button class="force-btn'+(it.forced?' active':'')+'" onclick="toggleForce('+i+')">Force</button>'+
       (state.reroll.items.length>2?'<button class="row-rm" onclick="removeReroll('+i+')">✕</button>':'');
     body.appendChild(row);
