@@ -149,7 +149,7 @@ h1 em{font-style:normal;color:var(--blue);}
 
 <nav class="tabs">
   <button class="tab-btn active" id="tab-shame" onclick="switchTab('shame')">Shame List</button>
-  <button class="tab-btn" id="tab-reroll" onclick="switchTab('reroll')">Re-roll</button>
+  <button class="tab-btn" id="tab-reroll" onclick="switchTab('reroll')">Item roll</button>
 </nav>
 
 <div class="main">
@@ -406,7 +406,7 @@ function pickWinner(data){
 function showWinner(idx){
   const data=activeTab==='shame'?state.shame.slices:state.reroll.items;
   const w=data[idx];
-  document.getElementById('winnerEyebrow').textContent=activeTab==='shame'?'On the shame list':'Re-roll result';
+  document.getElementById('winnerEyebrow').textContent=activeTab==='shame'?'On the shame list':'Item roll result';
   document.getElementById('winnerName').textContent=w.name||(activeTab==='shame'?'Contestant '+(idx+1):'Item '+(idx+1));
   const av=document.getElementById('winnerAvatar');
   if(activeTab==='shame'&&w.imgSrc){av.innerHTML='<img src="'+w.imgSrc+'" alt="">';}
