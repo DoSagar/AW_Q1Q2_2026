@@ -543,7 +543,7 @@ function renderShameDrawer(){
     body.appendChild(row);
   });
   foot.innerHTML=(isHost?'<button class="export-btn" onclick="exportSetup()">⬇ Download setup</button>':'')+
-    '<button class="add-row-btn"'+(state.shame.slices.length>=16?' disabled':'')+' onclick="addShame()">+ Add contestant</button>'+
+    '<button class="add-row-btn"'+(state.shame.slices.length>=40?' disabled':'')+' onclick="addShame()">+ Add contestant</button>'+
     '<button class="done-btn" onclick="closeDrawer()">Done</button>';
 }
 function renderRerollDrawer(){
@@ -569,7 +569,7 @@ function renderRerollDrawer(){
     '<button class="done-btn" onclick="closeDrawer()">Done</button>';
 }
 function toggleForce(i){const items=state.reroll.items,was=items[i].forced;items.forEach(d=>d.forced=false);if(!was)items[i].forced=true;renderRerollDrawer();}
-function addShame(){if(state.shame.slices.length>=16)return;state.shame.slices.push({name:'',img:null,imgSrc:null,color:PALETTE[state.shame.slices.length%PALETTE.length]});renderShameDrawer();drawWheel();document.getElementById('drawerBody').querySelectorAll('.row-input')[state.shame.slices.length-1].focus();}
+function addShame(){if(state.shame.slices.length>=40)return;state.shame.slices.push({name:'',img:null,imgSrc:null,color:PALETTE[state.shame.slices.length%PALETTE.length]});renderShameDrawer();drawWheel();document.getElementById('drawerBody').querySelectorAll('.row-input')[state.shame.slices.length-1].focus();}
 function removeShame(i){if(state.shame.slices.length<=2)return;state.shame.slices.splice(i,1);renderShameDrawer();drawWheel();}
 function addReroll(){if(state.reroll.items.length>=16)return;state.reroll.items.push({name:'',weight:1,forced:false,color:PALETTE[state.reroll.items.length%PALETTE.length],img:null,imgSrc:null});renderRerollDrawer();drawWheel();}
 function removeReroll(i){if(state.reroll.items.length<=2)return;state.reroll.items.splice(i,1);renderRerollDrawer();drawWheel();}
