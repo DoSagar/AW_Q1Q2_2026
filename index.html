@@ -133,6 +133,53 @@ h1 em{font-style:normal;color:var(--blue);}
 .crop-cancel:hover{border-color:var(--navy);color:var(--navy);}
 .crop-confirm{padding:.52rem 1.5rem;background:var(--blue);color:var(--white);border:none;border-radius:2px;cursor:pointer;font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;transition:background .15s;}
 .crop-confirm:hover{background:var(--navy);}
+/* ── Scoreboard ─────────────────────────────────────────── */
+#standingsPanel{flex-direction:column;padding:.9rem 1rem 0;overflow:hidden;gap:.75rem;}
+.sb-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:.5rem;flex-shrink:0;}
+.sb-eyebrow{font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);}
+.sb-title{font-size:1.2rem;font-weight:700;color:var(--navy);letter-spacing:-.01em;margin-top:.15rem;}
+.sb-stage-pill{font-size:.6rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);background:#F0F4F8;border:1px solid var(--gray-light);border-radius:100px;padding:.2rem .65rem;white-space:nowrap;flex-shrink:0;}
+.sb-await{flex:1;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--gray);letter-spacing:.05em;}
+.sb-table-wrap{flex:1;border:1px solid var(--gray-light);min-height:0;overflow:hidden;}
+.sb-table-wrap .tscroll{overflow-x:auto;overflow-y:auto;height:100%;}
+#sbTable{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.82rem;}
+#sbTable thead tr{background:var(--navy);}
+#sbTable thead th{padding:.6rem .75rem;font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;color:rgba(255,255,255,.45);text-align:right;}
+#sbTable thead th.h-rank{text-align:center;width:32px;padding:.6rem .35rem .6rem .6rem;}
+#sbTable thead th.h-name{text-align:left;color:rgba(255,255,255,.85);}
+#sbTable thead th.h-net{color:rgba(255,255,255,.9);border-left:1px solid rgba(255,255,255,.12);}
+#sbTable thead th.sb-col-hidden{opacity:0;}
+#sbTable tbody tr{border-bottom:1px solid var(--gray-light);}
+#sbTable tbody tr:last-child{border-bottom:none;}
+#sbTable tbody tr{will-change:transform;}
+#sbTable td{padding:.52rem .75rem;text-align:right;color:var(--gray-dark);vertical-align:middle;}
+#sbTable td.c-rank{text-align:center;font-size:.65rem;font-weight:700;color:var(--gray);padding:.52rem .35rem .52rem .6rem;width:32px;border-left:3px solid transparent;}
+#sbTable td.c-name{text-align:left;padding-left:.65rem;}
+#sbTable td.c-net{font-size:1rem;font-weight:700;color:var(--navy);background:#F0F4F8;border-left:1px solid var(--gray-light);padding-right:1rem;}
+#sbTable td.c-comment{text-align:left;font-style:italic;font-size:.72rem;color:var(--gray);max-width:160px;}
+#sbTable .sb-nm{font-weight:600;color:var(--near-black);}
+#sbTable .sb-nil{color:var(--gray-light);}
+#sbTable .sb-pen{color:var(--bad);}
+#sbTable .sb-neg{color:var(--bad);}
+#sbTable .sb-bribe{color:var(--bad);font-size:.78rem;}
+#sbTable tr.r1 td.c-rank{border-left-color:#B8902A;color:#B8902A;}
+#sbTable tr.r2 td.c-rank{border-left-color:#7A8C9A;color:#7A8C9A;}
+#sbTable tr.r3 td.c-rank{border-left-color:#9C6335;color:#9C6335;}
+#sbTable tr.r1 td.c-net{color:#B8902A;}
+@keyframes sbCellIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.sb-cell-reveal{animation:sbCellIn .3s ease both;}
+@keyframes sbNetFlash{0%{background:rgba(0,93,170,.14);}100%{background:#F0F4F8;}}
+.sb-net-flash{animation:sbNetFlash .6s ease both;}
+.sb-controls{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:.75rem 0 .9rem;gap:1rem;flex-wrap:wrap;}
+.sb-dots{display:flex;gap:.35rem;align-items:center;}
+.sb-dot{width:6px;height:6px;border-radius:50%;background:var(--gray-light);transition:background .3s;}
+.sb-dot.done{background:var(--blue);}
+.sb-dot.active{background:var(--blue);transform:scale(1.35);}
+.sb-reveal-btn{padding:.6rem 1.3rem;background:var(--blue);color:#fff;border:none;border-radius:2px;cursor:pointer;font-family:var(--font);font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;transition:background .15s;white-space:nowrap;}
+.sb-reveal-btn:hover{background:var(--navy);}
+.sb-reset-btn{padding:.6rem 1rem;background:transparent;border:1px solid var(--gray-light);color:var(--gray-dark);border-radius:2px;cursor:pointer;font-family:var(--font);font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;transition:border-color .15s,color .15s;white-space:nowrap;}
+.sb-reset-btn:hover{border-color:var(--blue);color:var(--blue);}
+.sb-done-label{font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);}
 </style>
 
 <div id="flash"></div>
@@ -149,13 +196,49 @@ h1 em{font-style:normal;color:var(--blue);}
 
 <nav class="tabs">
   <button class="tab-btn active" id="tab-shame" onclick="switchTab('shame')">Shame List</button>
-  <button class="tab-btn" id="tab-reroll" onclick="switchTab('reroll')">Item roll</button>
+  <button class="tab-btn" id="tab-reroll" onclick="switchTab('reroll')">Re-roll</button>
+  <button class="tab-btn" id="tab-standings" onclick="switchTab('standings')">Standings</button>
 </nav>
 
 <div class="main">
   <div class="wheel-container">
     <div class="pointer" id="pointer"></div>
     <canvas id="wheel"></canvas>
+  </div>
+  <div id="standingsPanel" style="display:none;flex:1;width:100%;min-height:0;">
+    <div class="sb-head">
+      <div>
+        <div class="sb-eyebrow">OPX Partners · Q1–Q2 2026</div>
+        <div class="sb-title">AW Standings</div>
+      </div>
+      <span id="sbStagePill" class="sb-stage-pill">Awaiting reveal</span>
+    </div>
+    <div id="sbAwait" class="sb-await">Standings will be revealed shortly</div>
+    <div id="sbTableWrap" class="sb-table-wrap" style="display:none;">
+      <div class="tscroll">
+        <table id="sbTable">
+          <thead><tr>
+            <th class="h-rank">#</th>
+            <th class="h-name">Name</th>
+            <th id="sbHAtt" class="sb-col-hidden">Attendance</th>
+            <th id="sbHEng" class="sb-col-hidden">Engagement</th>
+            <th id="sbHBribe" class="sb-col-hidden">Bribes (SEK)</th>
+            <th id="sbHCheat" class="sb-col-hidden">Cheat&#8209;correction</th>
+            <th id="sbHComment" class="sb-col-hidden">Comment</th>
+            <th class="h-net">Net AW Score</th>
+          </tr></thead>
+          <tbody id="sbTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="sbControls" style="display:none;" class="sb-controls">
+      <div id="sbDots" class="sb-dots"></div>
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        <button class="sb-reset-btn" onclick="sbReset()">Reset</button>
+        <button id="sbRevealBtn" class="sb-reveal-btn" onclick="sbNext()">Show standings</button>
+        <span id="sbDoneLabel" class="sb-done-label" style="display:none;">✓ Final standings</span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -221,6 +304,7 @@ const state={
 };
 
 let activeTab='shame';
+let scoreStage=0;
 let spinPhase='idle';
 let spinVelocity=0;
 let pendingWinnerIdx=-1;
@@ -297,13 +381,22 @@ function drawWheel(highlightIdx){
   ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle='#005DAA';ctx.fill();
 }
 
-function switchTab(tab){
-  if(spinPhase!=='idle')return;
+function switchTab(tab,fromRemote){
+  if(!fromRemote&&spinPhase!=='idle')return;
   activeTab=tab;
+  const isStandings=tab==='standings';
   document.getElementById('tab-shame').classList.toggle('active',tab==='shame');
   document.getElementById('tab-reroll').classList.toggle('active',tab==='reroll');
+  document.getElementById('tab-standings').classList.toggle('active',isStandings);
+  document.getElementById('standingsPanel').style.display=isStandings?'flex':'none';
+  document.querySelector('.wheel-container').style.display=isStandings?'none':'';
+  if(isHost){
+    document.getElementById('spinBtn').style.display=isStandings?'none':'';
+    document.getElementById('editBtn').style.display=isStandings?'none':'';
+  }
   document.getElementById('editBtnLabel').textContent=tab==='shame'?'Contestants':'Items';
-  drawWheel();
+  if(!isStandings)drawWheel();
+  if(!fromRemote&&isHost)fbPushConfig();
 }
 
 function handleSpin(){
@@ -406,7 +499,7 @@ function pickWinner(data){
 function showWinner(idx){
   const data=activeTab==='shame'?state.shame.slices:state.reroll.items;
   const w=data[idx];
-  document.getElementById('winnerEyebrow').textContent=activeTab==='shame'?'On the shame list':'Item roll result';
+  document.getElementById('winnerEyebrow').textContent=activeTab==='shame'?'On the shame list':'Re-roll result';
   document.getElementById('winnerName').textContent=w.name||(activeTab==='shame'?'Contestant '+(idx+1):'Item '+(idx+1));
   const av=document.getElementById('winnerAvatar');
   if(activeTab==='shame'&&w.imgSrc){av.innerHTML='<img src="'+w.imgSrc+'" alt="">';}
@@ -694,6 +787,7 @@ function fbWrite(obj){
 function fbCurrentConfig(){
   return{
     tab:activeTab,
+    scoreStage:scoreStage,
     shame:state.shame.slices.map(s=>({name:s.name||'',color:s.color})),
     reroll:state.reroll.items.map(s=>({name:s.name||'',color:s.color,weight:s.weight,forced:s.forced})),
     phase:'idle',winner:-1,ts:Date.now()
@@ -720,13 +814,9 @@ function handleFbEvent(d){
   if(!d||d.ts<=lastTs)return;
   lastTs=d.ts;
   // Sync tab
-  if(d.tab&&d.tab!==activeTab){
-    activeTab=d.tab;
-    document.getElementById('tab-shame').classList.toggle('active',activeTab==='shame');
-    document.getElementById('tab-reroll').classList.toggle('active',activeTab==='reroll');
-    document.getElementById('editBtnLabel').textContent=activeTab==='shame'?'Contestants':'Items';
-    drawWheel();
-  }
+  if(d.tab&&d.tab!==activeTab){switchTab(d.tab,true);}
+  // Sync scoreboard stage
+  if(typeof d.scoreStage==='number'&&d.scoreStage!==scoreStage){sbApplyStage(d.scoreStage,false);}
   // Sync contestants
   if(d.shame){
     while(state.shame.slices.length<d.shame.length)state.shame.slices.push({name:'',img:null,imgSrc:null,color:PALETTE[state.shame.slices.length%PALETTE.length]});
@@ -751,13 +841,191 @@ function handleFbEvent(d){
   }
 }
 
+// ── Scoreboard ────────────────────────────────────────────
+const SB_DATA=[
+  {name:'Peter',       att:14, eng:9,  bribe:0,  cheat:0,  comment:''},
+  {name:'Sofia',       att:10, eng:5,  bribe:0,  cheat:0,  comment:''},
+  {name:'Christoffer', att:15, eng:4,  bribe:0,  cheat:5,  comment:'Missed GT wagons'},
+  {name:'Ebba Ö',      att:7,  eng:0,  bribe:0,  cheat:0,  comment:''},
+  {name:'Ebba W',      att:3,  eng:3,  bribe:0,  cheat:0,  comment:''},
+  {name:'Pontus',      att:3,  eng:0,  bribe:0,  cheat:0,  comment:''},
+  {name:'Sally',       att:18, eng:0,  bribe:0,  cheat:16, comment:'Suspected fake scorecard'},
+  {name:'Felice',      att:18, eng:0,  bribe:0,  cheat:16, comment:'Suspected fake scorecard'},
+  {name:'Elin',        att:1,  eng:0,  bribe:0,  cheat:0,  comment:''},
+  {name:'Patric',      att:null,eng:null,bribe:null,cheat:null,comment:''},
+  {name:'Boris',       att:null,eng:null,bribe:55,cheat:70, comment:'Insufficient bribery is frowned upon'},
+];
+const SB_NEXT_BTN=['Show standings','Reveal: Attendance','Reveal: Engagement','Reveal: Bribes','Reveal: Corrections & Comments',null];
+const SB_PILL=['Awaiting reveal','Names only','Attendance','Engagement','Bribes','Final standings'];
+
+function sbCalcNet(p,s){
+  if(s<=1)return null;
+  let t=0,any=false;
+  if(s>=2&&p.att!==null){t+=p.att;any=true;}
+  if(s>=3&&p.eng!==null){t+=p.eng;any=true;}
+  if(s>=4&&p.bribe!==null){t+=p.bribe;any=true;}
+  if(s>=5&&p.cheat!==null){t-=p.cheat;any=true;}
+  return any?t:null;
+}
+function sbSorted(s){
+  return[...SB_DATA].sort((a,b)=>{
+    const na=sbCalcNet(a,s),nb=sbCalcNet(b,s);
+    if(na===null&&nb===null)return 0;
+    if(na===null)return 1;if(nb===null)return -1;
+    return nb-na;
+  });
+}
+function sbNil(v){return'<span class="sb-nil">'+(v||'—')+'</span>';}
+function sbFmtNet(n){
+  if(n===null)return sbNil('—');
+  if(n<0)return'<span class="sb-neg">('+Math.abs(n)+')</span>';
+  return n;
+}
+function sbBuildTable(){
+  const tbody=document.getElementById('sbTbody');
+  tbody.innerHTML='';
+  SB_DATA.forEach(p=>{
+    const tr=document.createElement('tr');
+    tr.dataset.name=p.name;
+    tr.innerHTML=
+      '<td class="c-rank">'+sbNil('—')+'</td>'+
+      '<td class="c-name"><span class="sb-nm">'+p.name+'</span></td>'+
+      '<td class="c-att">'+sbNil('—')+'</td>'+
+      '<td class="c-eng">'+sbNil('—')+'</td>'+
+      '<td class="c-bribe">'+sbNil('—')+'</td>'+
+      '<td class="c-cheat">'+sbNil('—')+'</td>'+
+      '<td class="c-comment"></td>'+
+      '<td class="c-net">'+sbNil('—')+'</td>';
+    tbody.appendChild(tr);
+  });
+  ['sbHAtt','sbHEng','sbHBribe','sbHCheat','sbHComment'].forEach(id=>document.getElementById(id).classList.add('sb-col-hidden'));
+}
+function sbCellVal(p,col){
+  if(col===1)return p.att===null?sbNil('—'):p.att;
+  if(col===2)return(!p.eng)?sbNil('—'):p.eng;
+  if(col===3)return p.bribe?'<span class="sb-bribe">'+Math.round(p.bribe)+' kr</span>':sbNil('—');
+  if(col===4)return p.cheat?'<span class="sb-pen">('+p.cheat+')</span>':sbNil('—');
+  return'';
+}
+function sbSetCol(cellSel,hdrId,col,withComment,animate){
+  document.getElementById(hdrId).classList.remove('sb-col-hidden');
+  Array.from(document.querySelectorAll('#sbTbody tr')).forEach((row,i)=>{
+    const p=SB_DATA.find(d=>d.name===row.dataset.name);
+    const cell=row.querySelector(cellSel);
+    cell.innerHTML=sbCellVal(p,col);
+    if(animate){cell.classList.remove('sb-cell-reveal');cell.offsetHeight;cell.style.animationDelay=(i*35)+'ms';cell.classList.add('sb-cell-reveal');}
+    if(withComment){
+      const cc=row.querySelector('.c-comment');
+      cc.textContent=p.comment||'';
+      if(animate){
+        document.getElementById('sbHComment').classList.remove('sb-col-hidden');
+        cc.classList.remove('sb-cell-reveal');cc.offsetHeight;cc.style.animationDelay=(i*35+15)+'ms';cc.classList.add('sb-cell-reveal');
+      } else {
+        document.getElementById('sbHComment').classList.remove('sb-col-hidden');
+      }
+    }
+  });
+}
+function sbFlipReorder(sorted){
+  const tbody=document.getElementById('sbTbody');
+  const rows=Array.from(tbody.querySelectorAll('tr'));
+  const before={};rows.forEach(r=>before[r.dataset.name]=r.getBoundingClientRect().top);
+  sorted.forEach(p=>tbody.appendChild(tbody.querySelector('tr[data-name="'+p.name+'"]')));
+  rows.forEach(r=>{
+    const dy=before[r.dataset.name]-r.getBoundingClientRect().top;
+    if(Math.abs(dy)>0.5){
+      r.style.transition='none';r.style.transform='translateY('+dy+'px)';
+      r.offsetHeight;
+      r.style.transition='transform .55s cubic-bezier(.4,0,.2,1)';
+      r.style.transform='';
+      r.addEventListener('transitionend',()=>{r.style.transition='';},{once:true});
+    }
+  });
+}
+function sbUpdateRanks(sorted,s,animate){
+  let rn=1;
+  sorted.forEach((p,i)=>{
+    const net=sbCalcNet(p,s);
+    const row=document.querySelector('#sbTbody tr[data-name="'+p.name+'"]');
+    if(!row)return;
+    if(i>0&&net!==null&&net===sbCalcNet(sorted[i-1],s)){}else rn=i+1;
+    const rClass=net===null?'':rn<=3?'r'+rn:'';
+    row.className=rClass;
+    row.querySelector('.c-rank').innerHTML=net===null?sbNil('—'):rn;
+    const nc=row.querySelector('.c-net');
+    nc.innerHTML=sbFmtNet(net);
+    if(animate){nc.classList.remove('sb-net-flash');nc.offsetHeight;nc.classList.add('sb-net-flash');}
+  });
+}
+function sbApplyStage(n,animate){
+  scoreStage=n;
+  const wrap=document.getElementById('sbTableWrap');
+  const aw=document.getElementById('sbAwait');
+  document.getElementById('sbStagePill').textContent=SB_PILL[Math.min(n,SB_PILL.length-1)];
+  if(n===0){
+    wrap.style.display='none';aw.style.display='flex';
+    sbBuildTable();
+  } else {
+    aw.style.display='none';
+    if(animate&&n===1){
+      // First reveal: fade table in showing names only
+      wrap.style.opacity='0';wrap.style.display='';
+      requestAnimationFrame(()=>{wrap.style.transition='opacity .4s';wrap.style.opacity='1';setTimeout(()=>wrap.style.transition='',400);});
+    } else if(!animate){
+      // Non-animated: rebuild and fill all columns up to n
+      sbBuildTable();
+      wrap.style.display='';
+      if(n>=2)sbSetCol('.c-att','sbHAtt',1,false,false);
+      if(n>=3)sbSetCol('.c-eng','sbHEng',2,false,false);
+      if(n>=4)sbSetCol('.c-bribe','sbHBribe',3,false,false);
+      if(n>=5)sbSetCol('.c-cheat','sbHCheat',4,true,false);
+      const sorted=sbSorted(n);
+      sorted.forEach(p=>document.getElementById('sbTbody').appendChild(document.querySelector('#sbTbody tr[data-name="'+p.name+'"]')));
+      sbUpdateRanks(sorted,n,false);
+    } else {
+      // Animated column reveal
+      if(n===2)sbSetCol('.c-att','sbHAtt',1,false,true);
+      else if(n===3)sbSetCol('.c-eng','sbHEng',2,false,true);
+      else if(n===4)sbSetCol('.c-bribe','sbHBribe',3,false,true);
+      else if(n===5)sbSetCol('.c-cheat','sbHCheat',4,true,true);
+      if(n>=2){
+        const sorted=sbSorted(n);
+        setTimeout(()=>{sbFlipReorder(sorted);setTimeout(()=>sbUpdateRanks(sorted,n,true),300);},50);
+      }
+    }
+  }
+  sbUpdateUI();
+}
+function sbUpdateUI(){
+  const btn=document.getElementById('sbRevealBtn');
+  const done=document.getElementById('sbDoneLabel');
+  const nextLabel=SB_NEXT_BTN[scoreStage];
+  if(nextLabel){btn.textContent=nextLabel;btn.style.display='';done.style.display='none';}
+  else{btn.style.display='none';done.style.display='';}
+  const dots=document.getElementById('sbDots');
+  dots.innerHTML='';
+  for(let i=0;i<=5;i++){const d=document.createElement('div');d.className='sb-dot'+(i<scoreStage?' done':i===scoreStage?' active':'');dots.appendChild(d);}
+}
+function sbNext(){
+  if(!isHost||scoreStage>=5)return;
+  sbApplyStage(scoreStage+1,true);
+  fbPushConfig();
+}
+function sbReset(){
+  sbApplyStage(0,false);
+  if(isHost)fbPushConfig();
+}
+
 // ── Init ──────────────────────────────────────────────────
 loadPreset();
 requestAnimationFrame(()=>requestAnimationFrame(sizeCanvas));
 
 // Host: push config on load so viewers get contestant names immediately
 // Viewer: start listening + update UI
+sbBuildTable();
+sbUpdateUI();
 if(isHost){
+  document.getElementById('sbControls').style.display='flex';
   window.addEventListener('load',()=>setTimeout(fbPushConfig,800));
 } else {
   fbListen();
